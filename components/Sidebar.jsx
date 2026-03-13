@@ -11,7 +11,7 @@ export default function Sidebar() {
   const subscriptionExpired = isSubscriptionExpired(user)
 
   const navItems = [
-    { icon: 'solar:widget-linear', label: 'Dashboard', href: '/' },
+    { icon: 'solar:widget-linear', label: 'Dashboard', href: '/dashboard' },
     { icon: 'solar:document-text-linear', label: 'Note Generation', href: '/notes' },
     { icon: 'solar:book-bookmark-linear', label: 'Past Questions', href: '/pastquestions' },
     { icon: 'solar:pen-new-square-linear', label: 'Exam', href: '/exam' },
@@ -25,17 +25,19 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex w-64 flex-col border-r border-[#EAEAEA] bg-white h-screen sticky top-0 py-6 px-4 shrink-0 z-10">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 mb-8 px-2 cursor-pointer">
-        <div className="w-6 h-6 bg-[#171717] rounded flex items-center justify-center">
-          <span className="text-white text-xs font-medium tracking-tighter leading-none">SM</span>
-        </div>
+      <Link href="/dashboard" className="flex items-center gap-2 mb-8 px-2 cursor-pointer">
+        <img
+          src="/logo.png"
+          alt="StudyMaster"
+          className="w-7 h-7 rounded-md object-contain"
+        />
         <span className="text-sm font-medium tracking-tight">StudyMaster</span>
       </Link>
 
       {/* Nav Links */}
       <nav className="flex-1 space-y-1">
         {navItems.map((item, index) => {
-          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+          const isActive = pathname.startsWith(item.href)
           const isDisabled = subscriptionExpired
           return (
             <Link

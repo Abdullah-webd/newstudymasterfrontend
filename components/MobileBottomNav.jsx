@@ -11,7 +11,7 @@ export default function MobileBottomNav() {
   const subscriptionExpired = isSubscriptionExpired(user)
 
   const navItems = [
-    { icon: 'solar:widget-linear', label: 'Dash', href: '/' },
+    { icon: 'solar:widget-linear', label: 'Dash', href: '/dashboard' },
     { icon: 'solar:magic-stick-linear', label: 'Study', href: '/notes' },
     { icon: 'solar:notebook-linear', label: 'My Notes', href: '/notes?view=library' },
     { icon: 'solar:book-bookmark-linear', label: 'Past Q.', href: '/pastquestions' },
@@ -26,7 +26,7 @@ export default function MobileBottomNav() {
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#EAEAEA] z-50 px-2 pb-safe pt-2 overflow-x-auto">
       <div className="flex items-center justify-between min-w-max px-2 gap-6 pb-2">
         {navItems.map((item, index) => {
-          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+          const isActive = pathname.startsWith(item.href)
           const isSettings = item.href.startsWith('/settings')
           const isDisabled = subscriptionExpired && !isSettings
           return (

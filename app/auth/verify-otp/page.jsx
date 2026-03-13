@@ -62,8 +62,8 @@ function OTPContent() {
         setIsLoading(false);
 
         if (result.success) {
-            setMessage('Email verified! Redirecting to sign in...');
-            setTimeout(() => router.push('/auth/signin'), 2000);
+            setMessage('Email verified! Redirecting to onboarding...');
+            setTimeout(() => router.push('/onboarding'), 500);
         } else {
             setError(result.message);
         }

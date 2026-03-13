@@ -11,7 +11,11 @@ export default function PublicCommunityPage() {
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <a href="/landing" className="font-heading font-semibold text-lg tracking-tight text-slate-900 flex items-center gap-2">
-            <span className="w-6 h-6 rounded bg-gradient-to-br from-blue-600 to-teal-500 text-white flex items-center justify-center text-xs">S</span>
+            <img
+              src="/logo.png"
+              alt="StudyMaster"
+              className="w-7 h-7 rounded-md object-contain"
+            />
             StudyMaster
           </a>
           <div className="flex items-center gap-3">

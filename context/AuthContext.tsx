@@ -11,6 +11,7 @@ export interface User {
     subscriptionId: string;
     role: string;
     isEmailVerified: boolean;
+    onboardingCompleted?: boolean;
     onboarding?: {
         class?: string;
         schoolName?: string;
@@ -47,6 +48,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+    const hasCompletedOnboarding = (user: User | null) => {
+        if (typeof user?.onboardingCompleted === 'boolean') {
+            return user.onboardingCompleted;
+        }
+        const onboarding = user?.onboarding || {};
+        return Object.values(onboarding).some((value) => {
+            if (value === null || value === undefined) return false;
+            if (typeof value === 'string') return value.trim().length > 0;
+            return true;
+        });
+    };
+
     useEffect(() => {
         // Initial load - check for existing session
         const storedToken = localStorage.getItem('token');
@@ -76,10 +89,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 localStorage.setItem('user', JSON.stringify(data.user));
 
                 // Redirect based on status
-                if (!data.user.onboarding || Object.keys(data.user.onboarding).length === 0) {
+                if (!data.user.isEmailVerified) {
+                    router.push(`/auth/verify-otp?email=${encodeURIComponent(data.user.email)}`);
+                } else if (!hasCompletedOnboarding(data.user)) {
                     router.push('/onboarding');
                 } else {
-                    router.push('/');
+                    router.push('/dashboard');
                 }
                 return { success: true };
             } else {
@@ -130,7 +145,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             const data = await response.json();
             if (data.success) {
-                return { success: true, message: data.message };
+                if (data.token && data.user) {
+                    setToken(data.token);
+                    setUser(data.user);
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                }
+                return { success: true, message: data.message || 'Email verified successfully' };
             } else {
                 return { success: false, message: data.message || 'Verification failed' };
             }
@@ -192,7 +213,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(data.user);
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                router.push('/onboarding'); // Assuming this is the next step after reset
+                router.push('/onboarding'); // Next step after reset
                 return { success: true, message: 'Password reset successfully' };
             } else {
                 return { success: false, message: data.message || 'Failed to reset password' };
@@ -205,6 +226,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const googleLogin = async (idToken: string, options?: { redirectTo?: string }) => {
         try {
+            console.log(process.env.NEXT_PUBLIC_API_URL)
             const response = await fetch(`${API_URL}/auth/google`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -217,13 +239,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
 
-                const hasOnboarded = data.user.onboarding && Object.keys(data.user.onboarding).length > 0;
-                if (!hasOnboarded) {
+                if (!data.user.isEmailVerified) {
+                    router.push(`/auth/verify-otp?email=${encodeURIComponent(data.user.email)}`);
+                } else if (!hasCompletedOnboarding(data.user)) {
                     router.push('/onboarding');
                 } else if (options?.redirectTo) {
                     router.push(options.redirectTo);
                 } else {
-                    router.push('/');
+                    router.push('/dashboard');
                 }
                 return { success: true, message: 'Logged in with Google' };
             } else {
@@ -257,10 +280,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const data = await response.json();
 
             if (data.success) {
-                const updatedUser = { ...user!, onboarding: data.data.onboarding };
+                const updatedUser = {
+                    ...user!,
+                    onboarding: data.data.onboarding,
+                    onboardingCompleted: data.data.onboardingCompleted ?? true
+                };
                 setUser(updatedUser);
                 localStorage.setItem('user', JSON.stringify(updatedUser));
-                router.push('/');
+                router.push('/dashboard');
                 return { success: true, message: 'Onboarding updated successfully' };
             } else {
                 return { success: false, message: data.message || 'Failed to update onboarding' };

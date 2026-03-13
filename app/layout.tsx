@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
+        url: '/favicon.ico',
+      },
+      {
         url: '/icon-light-32x32.png',
         media: '(prefers-color-scheme: light)',
       },
@@ -41,6 +44,8 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+        <meta name="google-site-verification" content="3JB2vSuSgLapJN34HN-66iOGMQW-nw9WHpZzOcV4F8E" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
       <body className={`${_geist.className} antialiased`}>
         <AuthProvider>

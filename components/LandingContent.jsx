@@ -1,5 +1,11 @@
 ﻿
+'use client'
+
+import { useState } from 'react'
+
 export default function LandingContent({ className = '' }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
     <main
       className={`landing-page text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden ${className}`}
@@ -15,7 +21,11 @@ export default function LandingContent({ className = '' }) {
             {/* Logo */}
             <div className="flex-shrink-0">
               <a href="/landing" className="font-heading font-semibold text-xl tracking-tighter text-slate-900 flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-gradient-to-br from-blue-600 to-teal-500 text-white flex items-center justify-center text-xs">S</span>
+                <img
+                  src="/logo.png"
+                  alt="StudyMaster"
+                  className="w-7 h-7 rounded-md object-contain"
+                />
                 StudyMaster
               </a>
             </div>
@@ -35,12 +45,34 @@ export default function LandingContent({ className = '' }) {
             </div>
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center">
-              <button className="text-slate-500 hover:text-slate-900" aria-label="Open navigation menu">
-                <iconify-icon icon="solar:hamburger-menu-linear" width="24" height="24"></iconify-icon>
+              <button
+                className="text-slate-500 hover:text-slate-900"
+                aria-label="Open navigation menu"
+                aria-expanded={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+              >
+                <iconify-icon icon={mobileMenuOpen ? "solar:close-circle-linear" : "solar:hamburger-menu-linear"} width="24" height="24"></iconify-icon>
               </button>
             </div>
           </div>
         </div>
+        {/* Mobile menu */}
+        {mobileMenuOpen ? (
+          <div className="md:hidden border-t border-slate-100/60 bg-white/95 backdrop-blur">
+            <nav className="px-4 py-4 space-y-3 text-sm">
+              <a href="#problem" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>The Problem</a>
+              <a href="#research" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Research</a>
+              <a href="#solution" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Solution</a>
+              <a href="#results" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Results</a>
+              <a href="/landing/community" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Community</a>
+              <a href="#pricing" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+              <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                <a href="/auth/signin" className="text-slate-700 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>Log in</a>
+                <a href="/auth/signup" className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-full hover:bg-blue-600 transition-all" onClick={() => setMobileMenuOpen(false)}>Start Free</a>
+              </div>
+            </nav>
+          </div>
+        ) : null}
       </header>
 
       {/* Hero Section (Story Opener) */}
@@ -693,7 +725,11 @@ export default function LandingContent({ className = '' }) {
       <footer className="bg-white py-12 border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded bg-gradient-to-br from-slate-800 to-slate-600 text-white flex items-center justify-center text-xs font-heading font-semibold">S</span>
+            <img
+              src="/logo.png"
+              alt="StudyMaster"
+              className="w-7 h-7 rounded-md object-contain"
+            />
             <span className="font-heading font-semibold text-lg tracking-tight text-slate-900">StudyMaster</span>
           </div>
           <p className="text-xs text-slate-500">© 2023 StudyMaster Prep. All rights reserved.</p>
@@ -712,7 +748,7 @@ export default function LandingContent({ className = '' }) {
         className="fixed bottom-6 right-6 w-14 h-14 bg-[#25D366] text-white rounded-full shadow-lg shadow-green-500/30 flex items-center justify-center hover:scale-110 hover:-translate-y-1 transition-all z-50 group"
         aria-label="Chat on WhatsApp"
       >
-        <iconify-icon icon="solar:whatsapp-bold" width="32"></iconify-icon>
+        <iconify-icon icon="solar:call-chat-rounded-line-duotone" width="24" height="24"></iconify-icon>
         <span className="absolute right-full mr-4 bg-white text-slate-800 text-xs font-medium px-3 py-1.5 rounded shadow-sm border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
           Chat with us
         </span>
@@ -720,5 +756,3 @@ export default function LandingContent({ className = '' }) {
     </main>
   )
 }
-
-
