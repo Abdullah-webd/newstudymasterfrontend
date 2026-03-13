@@ -13,6 +13,10 @@ const toShortDate = (value) => {
     return date.toLocaleDateString();
 };
 
+const getPhoneNumber = (user) => {
+    return user?.phoneNumber || user?.phone || user?.onboarding?.phoneNumber || '-';
+};
+
 export default function AdminPage() {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
@@ -227,6 +231,7 @@ export default function AdminPage() {
                                     <th className="py-2 pr-2">Name</th>
                                     <th className="py-2 pr-2">Email</th>
                                     <th className="py-2 pr-2">User ID</th>
+                                    <th className="py-2 pr-2">Phone</th>
                                     <th className="py-2 pr-2">Plan</th>
                                     <th className="py-2 pr-2">Expires</th>
                                 </tr>
@@ -237,13 +242,14 @@ export default function AdminPage() {
                                         <td className="py-2 pr-2">{user?.username || '-'}</td>
                                         <td className="py-2 pr-2">{user?.email || '-'}</td>
                                         <td className="py-2 pr-2 font-mono">{user?.userId || '-'}</td>
+                                        <td className="py-2 pr-2">{getPhoneNumber(user)}</td>
                                         <td className="py-2 pr-2">{user?.subscription?.plan || 'free'}</td>
                                         <td className="py-2 pr-2">{toShortDate(user?.subscription?.expirationDate)}</td>
                                     </tr>
                                 ))}
                                 {!users.length && !loadingDashboard && (
                                     <tr>
-                                        <td colSpan={5} className="py-6 text-center text-[#777]">No users found.</td>
+                                        <td colSpan={6} className="py-6 text-center text-[#777]">No users found.</td>
                                     </tr>
                                 )}
                             </tbody>

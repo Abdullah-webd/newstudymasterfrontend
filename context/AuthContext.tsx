@@ -8,6 +8,7 @@ export interface User {
     userId: string;
     username: string;
     email: string;
+    phoneNumber?: string;
     subscriptionId: string;
     role: string;
     isEmailVerified: boolean;
@@ -15,6 +16,7 @@ export interface User {
     onboarding?: {
         class?: string;
         schoolName?: string;
+        phoneNumber?: string;
         goal?: string;
         [key: string]: any;
     };
@@ -283,7 +285,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const updatedUser = {
                     ...user!,
                     onboarding: data.data.onboarding,
-                    onboardingCompleted: data.data.onboardingCompleted ?? true
+                    onboardingCompleted: data.data.onboardingCompleted ?? true,
+                    phoneNumber: data.data.phoneNumber ?? user?.phoneNumber
                 };
                 setUser(updatedUser);
                 localStorage.setItem('user', JSON.stringify(updatedUser));

@@ -12,6 +12,10 @@ const toShortDate = (value) => {
     return date.toLocaleDateString();
 };
 
+const getPhoneNumber = (user) => {
+    return user?.phoneNumber || user?.phone || user?.onboarding?.phoneNumber || '-';
+};
+
 export default function AdminUsersPage() {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
@@ -161,6 +165,7 @@ export default function AdminUsersPage() {
                                         <th className="py-2 pr-2">Name</th>
                                         <th className="py-2 pr-2">Email</th>
                                         <th className="py-2 pr-2">User ID</th>
+                                        <th className="py-2 pr-2">Phone</th>
                                         <th className="py-2 pr-2">Plan</th>
                                         <th className="py-2 pr-2">Expires</th>
                                         <th className="py-2 pr-2">Action</th>
@@ -172,6 +177,7 @@ export default function AdminUsersPage() {
                                             <td className="py-2 pr-2">{user?.username || '-'}</td>
                                             <td className="py-2 pr-2">{user?.email || '-'}</td>
                                             <td className="py-2 pr-2 font-mono">{user?.userId || '-'}</td>
+                                            <td className="py-2 pr-2">{getPhoneNumber(user)}</td>
                                             <td className="py-2 pr-2">{user?.subscription?.plan || 'free'}</td>
                                             <td className="py-2 pr-2">{toShortDate(user?.subscription?.expirationDate)}</td>
                                             <td className="py-2 pr-2">
@@ -186,7 +192,7 @@ export default function AdminUsersPage() {
                                     ))}
                                     {!users.length && !loading && (
                                         <tr>
-                                            <td colSpan={6} className="py-6 text-center text-[#777]">No users found.</td>
+                                            <td colSpan={7} className="py-6 text-center text-[#777]">No users found.</td>
                                         </tr>
                                     )}
                                 </tbody>

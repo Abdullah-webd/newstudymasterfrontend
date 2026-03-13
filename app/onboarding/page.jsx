@@ -10,6 +10,7 @@ export default function OnboardingPage() {
     const [formData, setFormData] = useState({
         class: '',
         schoolName: '',
+        phoneNumber: '',
         goal: '',
     });
     const [error, setError] = useState('');
@@ -30,6 +31,10 @@ export default function OnboardingPage() {
         }
         if (step === 2 && !formData.schoolName) {
             setError('Please enter your school name');
+            return;
+        }
+        if (step === 3 && !formData.phoneNumber) {
+            setError('Please enter your phone number');
             return;
         }
         setError('');
@@ -73,7 +78,7 @@ export default function OnboardingPage() {
                 <div className="w-full max-w-lg">
                     <div className="mb-12">
                         <div className="flex gap-2 mb-6">
-                            {[1, 2, 3].map((s) => (
+                            {[1, 2, 3, 4].map((s) => (
                                 <div
                                     key={s}
                                     className={`h-1.5 rounded-full flex-1 transition-all duration-500 ${s <= step ? 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.2)]' : 'bg-gray-100'}`}
@@ -83,7 +88,8 @@ export default function OnboardingPage() {
                         <h1 className="text-4xl font-bold mb-3 text-gray-900">
                             {step === 1 ? 'Which class are you in?' :
                                 step === 2 ? 'Where do you study?' :
-                                    'What is your study goal?'}
+                                    step === 3 ? 'What is your phone number?' :
+                                        'What is your study goal?'}
                         </h1>
                         <p className="text-gray-500">Help us personalize your experience to better serve you</p>
                     </div>
@@ -143,8 +149,35 @@ export default function OnboardingPage() {
                             </div>
                         )}
 
-                        {/* Step 3: Study Goal */}
+                        {/* Step 3: Phone Number */}
                         {step === 3 && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                        <iconify-icon icon="solar:phone-linear"></iconify-icon>
+                                    </div>
+                                    <input
+                                        type="tel"
+                                        required
+                                        autoFocus
+                                        value={formData.phoneNumber}
+                                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-5 pl-12 pr-4 text-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-300"
+                                        placeholder="Enter your phone number"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleNext}
+                                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-5 rounded-2xl font-bold text-white flex items-center justify-center gap-2 group shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all"
+                                >
+                                    Continue
+                                    <iconify-icon icon="solar:arrow-right-linear" className="group-hover:translate-x-1 transition-transform"></iconify-icon>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Step 4: Study Goal */}
+                        {step === 4 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="relative">
                                     <iconify-icon icon="solar:pen-new-square-linear" className="absolute top-5 left-4 text-gray-400"></iconify-icon>
