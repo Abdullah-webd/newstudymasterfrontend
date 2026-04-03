@@ -11,7 +11,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'StudyMaster Dashboard',
+  title: 'StudyMaster Your AI Study Partner',
   description: 'Your personal study companion dashboard',
   icons: {
     icon: [

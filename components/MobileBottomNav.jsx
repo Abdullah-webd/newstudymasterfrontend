@@ -19,6 +19,7 @@ export default function MobileBottomNav() {
     { icon: 'solar:calendar-linear', label: 'Time', href: '/timetable' },
     { icon: 'solar:user-speak-rounded-linear', label: 'Coach', href: '/coach' },
     { icon: 'solar:users-group-two-rounded-linear', label: 'Comm.', href: '/community' },
+    { icon: 'solar:gamepad-linear', label: 'Gaming', href: '/gaming' },
     { icon: 'solar:settings-linear', label: 'Settings', href: '/settings' },
   ]
 
@@ -28,7 +29,8 @@ export default function MobileBottomNav() {
         {navItems.map((item, index) => {
           const isActive = pathname.startsWith(item.href)
           const isSettings = item.href.startsWith('/settings')
-          const isDisabled = subscriptionExpired && !isSettings
+          const isGaming = item.label === 'Gaming'
+          const isDisabled = subscriptionExpired && !isSettings && !isGaming
           return (
             <Link
               key={index}

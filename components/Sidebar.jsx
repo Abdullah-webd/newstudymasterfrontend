@@ -18,6 +18,7 @@ export default function Sidebar() {
     { icon: 'solar:calendar-linear', label: 'Time Table', href: '/timetable' },
     { icon: 'solar:user-speak-rounded-linear', label: 'Coach', href: '/coach' },
     { icon: 'solar:users-group-two-rounded-linear', label: 'Community', href: '/community' },
+    { icon: 'solar:gamepad-linear', label: 'Gaming', href: '/gaming' },
   ]
 
   const settingsItem = { icon: 'solar:settings-linear', label: 'Settings', href: '/settings' }
@@ -38,7 +39,7 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1">
         {navItems.map((item, index) => {
           const isActive = pathname.startsWith(item.href)
-          const isDisabled = subscriptionExpired
+          const isDisabled = subscriptionExpired && item.label !== 'Gaming'
           return (
             <Link
               key={index}
