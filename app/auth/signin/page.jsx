@@ -93,7 +93,7 @@ export default function SigninPage() {
                         <div>
                             <div className="flex items-center justify-between mb-2 ml-1">
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Password</label>
-                                <Link href="#" className="text-xs font-bold text-blue-600 hover:underline">Forgot password?</Link>
+                                <Link href="/auth/forgot-password" summer className="text-xs font-bold text-blue-600 hover:underline">Forgot password?</Link>
                             </div>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
