@@ -231,7 +231,7 @@ export default function AdminPage() {
                                     <th className="py-2 pr-2">Name</th>
                                     <th className="py-2 pr-2">Email</th>
                                     <th className="py-2 pr-2">User ID</th>
-                                    <th className="py-2 pr-2">Phone</th>
+                                    <th className="py-2 pr-2">WhatsApp</th>
                                     <th className="py-2 pr-2">Plan</th>
                                     <th className="py-2 pr-2">Expires</th>
                                 </tr>

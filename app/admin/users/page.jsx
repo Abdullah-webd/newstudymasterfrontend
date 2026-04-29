@@ -37,6 +37,8 @@ export default function AdminUsersPage() {
     const [selectedUserId, setSelectedUserId] = useState('');
     const [renewMsg, setRenewMsg] = useState('');
     const [renewLoading, setRenewLoading] = useState(false);
+    const [contactedMap, setContactedMap] = useState({});
+    const [contactingSaving, setContactingSaving] = useState({});
 
     useEffect(() => {
         const session = getAdminSession();
@@ -81,6 +83,12 @@ export default function AdminUsersPage() {
             setUsers(Array.isArray(data.data) ? data.data : []);
             setTotalPages(data.totalPages || 1);
             setTotalCount(data.count || 0);
+            // Sync contacted state from server
+            const map = {};
+            (Array.isArray(data.data) ? data.data : []).forEach((u) => {
+                map[u.userId] = u.contactedByAdmin || false;
+            });
+            setContactedMap(map);
         } catch (err) {
             if (String(err?.message || '').toLowerCase().includes('token')) {
                 clearAdminSession();
@@ -129,6 +137,26 @@ export default function AdminUsersPage() {
         }
     };
 
+    const toggleContacted = async (userId, newValue) => {
+        setContactedMap((prev) => ({ ...prev, [userId]: newValue }));
+        setContactingSaving((prev) => ({ ...prev, [userId]: true }));
+        try {
+            await fetch(`${API_URL}/admin/users/${userId}/contacted`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ contacted: newValue }),
+            });
+        } catch (_) {
+            // Revert on failure
+            setContactedMap((prev) => ({ ...prev, [userId]: !newValue }));
+        } finally {
+            setContactingSaving((prev) => ({ ...prev, [userId]: false }));
+        }
+    };
+
     if (!ready) return <div className="min-h-screen bg-[#f6f7fb]" />;
 
     return (
@@ -165,9 +193,10 @@ export default function AdminUsersPage() {
                                         <th className="py-2 pr-2">Name</th>
                                         <th className="py-2 pr-2">Email</th>
                                         <th className="py-2 pr-2">User ID</th>
-                                        <th className="py-2 pr-2">Phone</th>
+                                        <th className="py-2 pr-2">WhatsApp</th>
                                         <th className="py-2 pr-2">Plan</th>
                                         <th className="py-2 pr-2">Expires</th>
+                                        <th className="py-2 pr-2">Contacted</th>
                                         <th className="py-2 pr-2">Action</th>
                                     </tr>
                                 </thead>
@@ -181,6 +210,20 @@ export default function AdminUsersPage() {
                                             <td className="py-2 pr-2">{user?.subscription?.plan || 'free'}</td>
                                             <td className="py-2 pr-2">{toShortDate(user?.subscription?.expirationDate)}</td>
                                             <td className="py-2 pr-2">
+                                                <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={contactedMap[user?.userId] || false}
+                                                        disabled={contactingSaving[user?.userId]}
+                                                        onChange={(e) => toggleContacted(user?.userId, e.target.checked)}
+                                                        className="w-4 h-4 accent-[#171717] cursor-pointer"
+                                                    />
+                                                    <span className={`text-xs font-medium ${contactedMap[user?.userId] ? 'text-green-600' : 'text-[#999]'}`}>
+                                                        {contactingSaving[user?.userId] ? 'Saving…' : contactedMap[user?.userId] ? 'Yes' : 'No'}
+                                                    </span>
+                                                </label>
+                                            </td>
+                                            <td className="py-2 pr-2">
                                                 <button
                                                     onClick={() => setSelectedUserId(user?.userId || '')}
                                                     className="text-xs border border-[#ddd] px-2 py-1 rounded bg-white hover:bg-[#f8f8f8]"
@@ -192,7 +235,7 @@ export default function AdminUsersPage() {
                                     ))}
                                     {!users.length && !loading && (
                                         <tr>
-                                            <td colSpan={7} className="py-6 text-center text-[#777]">No users found.</td>
+                                            <td colSpan={8} className="py-6 text-center text-[#777]">No users found.</td>
                                         </tr>
                                     )}
                                 </tbody>

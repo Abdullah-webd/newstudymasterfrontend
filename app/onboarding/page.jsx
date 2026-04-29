@@ -34,7 +34,7 @@ export default function OnboardingPage() {
             return;
         }
         if (step === 3 && !formData.phoneNumber) {
-            setError('Please enter your phone number');
+            setError('Please enter your WhatsApp number');
             return;
         }
         setError('');
@@ -88,7 +88,7 @@ export default function OnboardingPage() {
                         <h1 className="text-4xl font-bold mb-3 text-gray-900">
                             {step === 1 ? 'Which class are you in?' :
                                 step === 2 ? 'Where do you study?' :
-                                    step === 3 ? 'What is your phone number?' :
+                                    step === 3 ? 'What is your WhatsApp number?' :
                                         'What is your study goal?'}
                         </h1>
                         <p className="text-gray-500">Help us personalize your experience to better serve you</p>
@@ -154,7 +154,7 @@ export default function OnboardingPage() {
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                                        <iconify-icon icon="solar:phone-linear"></iconify-icon>
+                                        <iconify-icon icon="logos:whatsapp-icon"></iconify-icon>
                                     </div>
                                     <input
                                         type="tel"
@@ -163,7 +163,7 @@ export default function OnboardingPage() {
                                         value={formData.phoneNumber}
                                         onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-5 pl-12 pr-4 text-xl font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-300"
-                                        placeholder="Enter your phone number"
+                                        placeholder="Enter your WhatsApp number"
                                     />
                                 </div>
                                 <button
