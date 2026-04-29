@@ -16,6 +16,33 @@ const getPhoneNumber = (user) => {
     return user?.phoneNumber || user?.phone || user?.onboarding?.phoneNumber || '-';
 };
 
+// Returns 'expired' | 'trial' | 'active'
+const getSubStatus = (subscription) => {
+    if (!subscription?.expirationDate) return 'expired';
+    const expired = new Date(subscription.expirationDate) < new Date();
+    if (expired) return 'expired';
+    if (subscription.plan === '1-day-free-trial') return 'trial';
+    return 'active';
+};
+
+const SubBadge = ({ subscription }) => {
+    const status = getSubStatus(subscription);
+    const styles = {
+        expired: 'bg-red-50 text-red-600 border border-red-200',
+        trial:   'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        active:  'bg-green-50 text-green-700 border border-green-200',
+    };
+    const labels = { expired: 'Expired', trial: 'Trial', active: 'Active' };
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${styles[status]}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${
+                status === 'expired' ? 'bg-red-500' : status === 'trial' ? 'bg-yellow-500' : 'bg-green-500'
+            }`} />
+            {labels[status]}
+        </span>
+    );
+};
+
 export default function AdminUsersPage() {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
@@ -194,6 +221,7 @@ export default function AdminUsersPage() {
                                         <th className="py-2 pr-2">Email</th>
                                         <th className="py-2 pr-2">User ID</th>
                                         <th className="py-2 pr-2">WhatsApp</th>
+                                        <th className="py-2 pr-2">Status</th>
                                         <th className="py-2 pr-2">Plan</th>
                                         <th className="py-2 pr-2">Expires</th>
                                         <th className="py-2 pr-2">Contacted</th>
@@ -202,11 +230,14 @@ export default function AdminUsersPage() {
                                 </thead>
                                 <tbody>
                                     {users.map((user) => (
-                                        <tr key={user?._id || user?.userId} className="border-b border-[#f3f3f3] hover:bg-[#fafafa]">
+                                        <tr key={user?._id || user?.userId} className={`border-b border-[#f3f3f3] hover:bg-[#fafafa] ${
+                                            getSubStatus(user?.subscription) === 'expired' ? 'bg-red-50/40' : ''
+                                        }`}>
                                             <td className="py-2 pr-2">{user?.username || '-'}</td>
                                             <td className="py-2 pr-2">{user?.email || '-'}</td>
                                             <td className="py-2 pr-2 font-mono">{user?.userId || '-'}</td>
                                             <td className="py-2 pr-2">{getPhoneNumber(user)}</td>
+                                            <td className="py-2 pr-2"><SubBadge subscription={user?.subscription} /></td>
                                             <td className="py-2 pr-2">{user?.subscription?.plan || 'free'}</td>
                                             <td className="py-2 pr-2">{toShortDate(user?.subscription?.expirationDate)}</td>
                                             <td className="py-2 pr-2">
@@ -235,7 +266,7 @@ export default function AdminUsersPage() {
                                     ))}
                                     {!users.length && !loading && (
                                         <tr>
-                                            <td colSpan={8} className="py-6 text-center text-[#777]">No users found.</td>
+                                            <td colSpan={9} className="py-6 text-center text-[#777]">No users found.</td>
                                         </tr>
                                     )}
                                 </tbody>

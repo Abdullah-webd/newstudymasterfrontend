@@ -17,6 +17,32 @@ const getPhoneNumber = (user) => {
     return user?.phoneNumber || user?.phone || user?.onboarding?.phoneNumber || '-';
 };
 
+const getSubStatus = (subscription) => {
+    if (!subscription?.expirationDate) return 'expired';
+    const expired = new Date(subscription.expirationDate) < new Date();
+    if (expired) return 'expired';
+    if (subscription.plan === '1-day-free-trial') return 'trial';
+    return 'active';
+};
+
+const SubBadge = ({ subscription }) => {
+    const status = getSubStatus(subscription);
+    const styles = {
+        expired: 'bg-red-50 text-red-600 border border-red-200',
+        trial:   'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        active:  'bg-green-50 text-green-700 border border-green-200',
+    };
+    const labels = { expired: 'Expired', trial: 'Trial', active: 'Active' };
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${styles[status]}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${
+                status === 'expired' ? 'bg-red-500' : status === 'trial' ? 'bg-yellow-500' : 'bg-green-500'
+            }`} />
+            {labels[status]}
+        </span>
+    );
+};
+
 export default function AdminPage() {
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
@@ -32,6 +58,9 @@ export default function AdminPage() {
     const [dashboard, setDashboard] = useState(null);
     const [loadingDashboard, setLoadingDashboard] = useState(false);
     const [dashboardError, setDashboardError] = useState('');
+
+    const [contactedMap, setContactedMap] = useState({});
+    const [contactingSaving, setContactingSaving] = useState({});
 
     useEffect(() => {
         const session = getAdminSession();
@@ -59,6 +88,12 @@ export default function AdminPage() {
             }
 
             setDashboard(data.data);
+            
+            const map = {};
+            (data.data.users || []).forEach((u) => {
+                map[u.userId] = u.contactedByAdmin || false;
+            });
+            setContactedMap(map);
         } catch (error) {
             if (String(error?.message || '').toLowerCase().includes('token')) {
                 clearAdminSession();
@@ -110,6 +145,25 @@ export default function AdminPage() {
         setAuthed(false);
         setToken('');
         router.push('/admin');
+    };
+
+    const toggleContacted = async (userId, newValue) => {
+        setContactedMap((prev) => ({ ...prev, [userId]: newValue }));
+        setContactingSaving((prev) => ({ ...prev, [userId]: true }));
+        try {
+            await fetch(`${API_URL}/admin/users/${userId}/contacted`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ contacted: newValue }),
+            });
+        } catch (_) {
+            setContactedMap((prev) => ({ ...prev, [userId]: !newValue }));
+        } finally {
+            setContactingSaving((prev) => ({ ...prev, [userId]: false }));
+        }
     };
 
     if (!ready) {
@@ -183,6 +237,15 @@ export default function AdminPage() {
                     <KpiCard label="Most Used Tab" value={summary.mostUsedTab || '-'} />
                 </section>
 
+                {/* Expired users banner */}
+                {users.filter(u => getSubStatus(u.subscription) === 'expired').length > 0 && (
+                    <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+                        <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                        <strong>{users.filter(u => getSubStatus(u.subscription) === 'expired').length}</strong>
+                        &nbsp;user(s) have an expired subscription — visit <Link href="/admin/users" className="underline font-semibold">Manage Users</Link> to renew.
+                    </div>
+                )}
+
                 <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                     <div className="bg-white border border-[#e8e8e8] rounded-xl p-4">
                         <h2 className="text-sm font-semibold text-[#171717] mb-3">User Growth</h2>
@@ -232,24 +295,43 @@ export default function AdminPage() {
                                     <th className="py-2 pr-2">Email</th>
                                     <th className="py-2 pr-2">User ID</th>
                                     <th className="py-2 pr-2">WhatsApp</th>
+                                    <th className="py-2 pr-2">Status</th>
                                     <th className="py-2 pr-2">Plan</th>
                                     <th className="py-2 pr-2">Expires</th>
+                                    <th className="py-2 pr-2">Contacted</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {users.slice(0, 8).map((user) => (
-                                    <tr key={user?._id || user?.userId} className="border-b border-[#f3f3f3]">
+                                    <tr key={user?._id || user?.userId} className={`border-b border-[#f3f3f3] ${
+                                        getSubStatus(user?.subscription) === 'expired' ? 'bg-red-50/40' : ''
+                                    }`}>
                                         <td className="py-2 pr-2">{user?.username || '-'}</td>
                                         <td className="py-2 pr-2">{user?.email || '-'}</td>
                                         <td className="py-2 pr-2 font-mono">{user?.userId || '-'}</td>
                                         <td className="py-2 pr-2">{getPhoneNumber(user)}</td>
+                                        <td className="py-2 pr-2"><SubBadge subscription={user?.subscription} /></td>
                                         <td className="py-2 pr-2">{user?.subscription?.plan || 'free'}</td>
                                         <td className="py-2 pr-2">{toShortDate(user?.subscription?.expirationDate)}</td>
+                                        <td className="py-2 pr-2">
+                                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={contactedMap[user?.userId] || false}
+                                                    disabled={contactingSaving[user?.userId]}
+                                                    onChange={(e) => toggleContacted(user?.userId, e.target.checked)}
+                                                    className="w-4 h-4 accent-[#171717] cursor-pointer"
+                                                />
+                                                <span className={`text-[10px] font-medium ${contactedMap[user?.userId] ? 'text-green-600' : 'text-[#999]'}`}>
+                                                    {contactingSaving[user?.userId] ? '…' : contactedMap[user?.userId] ? 'Yes' : 'No'}
+                                                </span>
+                                            </label>
+                                        </td>
                                     </tr>
                                 ))}
                                 {!users.length && !loadingDashboard && (
                                     <tr>
-                                        <td colSpan={6} className="py-6 text-center text-[#777]">No users found.</td>
+                                        <td colSpan={8} className="py-6 text-center text-[#777]">No users found.</td>
                                     </tr>
                                 )}
                             </tbody>
