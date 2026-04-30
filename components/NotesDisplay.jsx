@@ -226,10 +226,20 @@ export default function NotesDisplay({ noteData }) {
       return
     }
 
-    // Extract text content from HTML
+    // Extract text content from HTML more carefully
     const tempDiv = document.createElement('div')
     tempDiv.innerHTML = noteData.content
-    const textToRead = `${noteData.title}. ${tempDiv.innerText}`
+    
+    // Remove unwanted elements that shouldn't be read
+    const unwantedElements = tempDiv.querySelectorAll('script, style, pre, code, button, .quiz-section')
+    unwantedElements.forEach(el => el.remove())
+
+    let textToRead = `${noteData.title}. ${tempDiv.innerText || tempDiv.textContent}`
+    
+    // Fallback: Strip any remaining HTML tags using regex if innerText still has them
+    textToRead = textToRead.replace(/<[^>]*>?/gm, '')
+    // Clean up extra whitespace
+    textToRead = textToRead.replace(/\s+/g, ' ').trim()
 
     const utterance = new SpeechSynthesisUtterance(textToRead)
     
