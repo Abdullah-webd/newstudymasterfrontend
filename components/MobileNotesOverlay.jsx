@@ -1,9 +1,21 @@
 'use client'
 
 import { toast } from 'sonner'
+import { useState, useEffect, useRef } from 'react'
 import QuizSection from './QuizSection'
 
 export default function MobileNotesOverlay({ isOpen, onClose, noteData }) {
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const synthRef = useRef(null)
+
+  useEffect(() => {
+    synthRef.current = window.speechSynthesis
+    return () => {
+      if (synthRef.current) {
+        synthRef.current.cancel()
+      }
+    }
+  }, [])
   const handleCopy = () => {
     if (!noteData) return
     const content = document.getElementById('mobileActualNotes').innerText
@@ -175,6 +187,36 @@ export default function MobileNotesOverlay({ isOpen, onClose, noteData }) {
   }
 
 
+  const handleReadAloud = () => {
+    if (!noteData) return
+
+    if (isSpeaking) {
+      synthRef.current.cancel()
+      setIsSpeaking(false)
+      return
+    }
+
+    // Extract text content from HTML
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = noteData.content
+    const textToRead = `${noteData.title}. ${tempDiv.innerText}`
+
+    const utterance = new SpeechSynthesisUtterance(textToRead)
+    
+    utterance.onend = () => {
+      setIsSpeaking(false)
+    }
+
+    utterance.onerror = (event) => {
+      console.error('SpeechSynthesisUtterance error', event)
+      setIsSpeaking(false)
+      toast.error('Could not read notes aloud.')
+    }
+
+    setIsSpeaking(true)
+    synthRef.current.speak(utterance)
+  }
+
   const handlePrint = () => {
     if (!noteData) return
     const w = window.open('', '_blank')
@@ -246,6 +288,14 @@ export default function MobileNotesOverlay({ isOpen, onClose, noteData }) {
         >
           <iconify-icon icon="solar:printer-linear" width="18" height="18"></iconify-icon>
           Print Notes
+        </button>
+        <button
+          onClick={handleReadAloud}
+          disabled={!noteData}
+          className={`w-12 h-12 flex items-center justify-center border rounded-xl transition-colors ${isSpeaking ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'border-slate-200 text-slate-600'}`}
+          title={isSpeaking ? "Stop Reading" : "Read Out Loud"}
+        >
+          <iconify-icon icon={isSpeaking ? "solar:stop-circle-linear" : "solar:volume-loud-linear"} width="20" height="20"></iconify-icon>
         </button>
         <button
           onClick={handleCopy}

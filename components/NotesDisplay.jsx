@@ -1,10 +1,21 @@
 'use client'
 
 import { toast } from 'sonner'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import QuizSection from './QuizSection'
 
 export default function NotesDisplay({ noteData }) {
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const synthRef = useRef(null)
+
+  useEffect(() => {
+    synthRef.current = window.speechSynthesis
+    return () => {
+      if (synthRef.current) {
+        synthRef.current.cancel()
+      }
+    }
+  }, [])
   const handleCopy = () => {
     if (!noteData) return
     const content = document.getElementById('actualNotes').innerText
@@ -206,6 +217,36 @@ export default function NotesDisplay({ noteData }) {
     }
   }
 
+  const handleReadAloud = () => {
+    if (!noteData) return
+
+    if (isSpeaking) {
+      synthRef.current.cancel()
+      setIsSpeaking(false)
+      return
+    }
+
+    // Extract text content from HTML
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = noteData.content
+    const textToRead = `${noteData.title}. ${tempDiv.innerText}`
+
+    const utterance = new SpeechSynthesisUtterance(textToRead)
+    
+    utterance.onend = () => {
+      setIsSpeaking(false)
+    }
+
+    utterance.onerror = (event) => {
+      console.error('SpeechSynthesisUtterance error', event)
+      setIsSpeaking(false)
+      toast.error('Could not read notes aloud.')
+    }
+
+    setIsSpeaking(true)
+    synthRef.current.speak(utterance)
+  }
+
   if (!noteData) {
     return (
       <section className="hidden md:flex flex-1 flex-col bg-white overflow-hidden items-center justify-center text-center p-8">
@@ -247,6 +288,9 @@ export default function NotesDisplay({ noteData }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={handleReadAloud} className={`p-2 transition-colors ${isSpeaking ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`} title={isSpeaking ? "Stop Reading" : "Read Out Loud"}>
+            <iconify-icon icon={isSpeaking ? "solar:stop-circle-linear" : "solar:volume-loud-linear"} width="20" height="20"></iconify-icon>
+          </button>
           <button onClick={handleCopy} className="p-2 text-slate-400 hover:text-slate-600 transition-colors" title="Copy Content">
             <iconify-icon icon="solar:copy-linear" width="20" height="20"></iconify-icon>
           </button>
