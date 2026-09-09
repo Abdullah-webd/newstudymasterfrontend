@@ -18,11 +18,25 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
     timeLimit: 60
   });
 
+  const [examNames, setExamNames] = useState(['WAEC', 'JAMB']);
+
+  // Exam-first: confirm available exams, then load subjects only for the chosen exam.
   useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/filters`)
+      .then((r) => r.json())
+      .then((res) => { if (res.success && res.data.examNames?.length) setExamNames(res.data.examNames) })
+      .catch(() => {});
+    setLoadingSubjects(false);
+  }, []);
+
+  useEffect(() => {
+    setSubjects([]);
+    setFilters(prev => ({ ...prev, subject: '', year: '', questionType: '' }));
+    if (!filters.examType) return;
     const fetchSubjects = async () => {
       try {
         setLoadingSubjects(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/filters`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/filters?exam_name=${encodeURIComponent(filters.examType)}`);
         const result = await response.json();
         if (result.success) {
           setSubjects(result.data.subjects);
@@ -35,10 +49,10 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
       }
     };
     fetchSubjects();
-  }, []);
+  }, [filters.examType]);
 
   useEffect(() => {
-    if (!filters.subject) {
+    if (!filters.subject || !filters.examType) {
       setDependentOptions({ years: [], examNames: [], questionTypes: [] });
       return;
     }
@@ -46,21 +60,14 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
     const fetchDependent = async () => {
       try {
         setLoadingDependent(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/filters?subject=${encodeURIComponent(filters.subject)}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/filters?exam_name=${encodeURIComponent(filters.examType)}&subject=${encodeURIComponent(filters.subject)}`);
         const result = await response.json();
         if (result.success) {
           setDependentOptions(result.data);
-
-          // Set defaults if currently selected ones are not in the new options
-          const newYear = result.data.years.length > 0 ? result.data.years[0].toString() : '';
-          const newExamType = result.data.examNames.length > 0 ? result.data.examNames[0] : '';
-          const newQuestionType = result.data.questionTypes.length > 0 ? result.data.questionTypes[0] : '';
-
           setFilters(prev => ({
             ...prev,
-            year: newYear,
-            examType: newExamType,
-            questionType: newQuestionType
+            year: result.data.years.length > 0 ? result.data.years[0].toString() : '',
+            questionType: result.data.questionTypes.length > 0 ? result.data.questionTypes[0] : '',
           }));
         }
       } catch (error) {
@@ -71,7 +78,7 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
       }
     };
     fetchDependent();
-  }, [filters.subject]);
+  }, [filters.subject, filters.examType]);
 
   const handleStart = () => {
     if (!filters.subject || !filters.year || !filters.examType || !filters.questionType) {
@@ -85,14 +92,6 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
     });
   };
 
-  if (loadingSubjects) {
-    return (
-      <div className="w-full h-full flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
   const isStep2Enabled = filters.subject && !loadingDependent;
 
   return (
@@ -103,8 +102,27 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
       </div>
 
       <div className="space-y-8 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-50">
+        {/* Exam first — the platform's focus */}
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Exam</label>
+          <div className="flex flex-wrap gap-2">
+            {examNames.map(type => (
+              <button
+                key={type}
+                onClick={() => setFilters({ ...filters, examType: type })}
+                className={`flex-1 py-4 px-4 rounded-xl text-sm font-bold transition-all border-2 ${filters.examType === type
+                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
+                    : 'bg-slate-50 border-transparent text-slate-400 hover:border-slate-200'
+                  }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Subject and Year Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity ${!filters.examType ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Subject</label>
             <div className="relative">
@@ -113,8 +131,8 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
                 onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
                 className="w-full bg-slate-50/50 border-2 border-transparent rounded-2xl px-5 py-4 text-base font-semibold focus:outline-none focus:bg-white focus:border-indigo-500/10 transition-all appearance-none capitalize cursor-pointer"
               >
-                <option value="" disabled>Select Subject</option>
-                {subjects.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                <option value="" disabled>{loadingSubjects ? 'Loading subjects…' : 'Select Subject'}</option>
+                {subjects.map(sub => <option key={sub} value={sub}>{sub.replace(/-/g, ' ')}</option>)}
               </select>
               <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
                 <iconify-icon icon="solar:alt-arrow-down-linear" className="text-slate-400"></iconify-icon>
@@ -141,26 +159,8 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
           </div>
         </div>
 
-        {/* Exam and Question Type Row */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity ${!isStep2Enabled ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Exam Type</label>
-            <div className="flex flex-wrap gap-2">
-              {dependentOptions.examNames.map(type => (
-                <button
-                  key={type}
-                  onClick={() => setFilters({ ...filters, examType: type })}
-                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 ${filters.examType === type
-                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
-                      : 'bg-slate-50 border-transparent text-slate-400 hover:border-slate-200'
-                    }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
-
+        {/* Question Type Row */}
+        <div className={`grid grid-cols-1 gap-6 transition-opacity ${!isStep2Enabled ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Question Type</label>
             <div className="flex flex-wrap gap-2">
@@ -225,7 +225,7 @@ export default function ExamFilterScreen({ onStart, filters, setFilters }) {
 
         <button
           onClick={handleStart}
-          disabled={!filters.subject || loadingDependent}
+          disabled={!filters.examType || !filters.subject || loadingDependent}
           className="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-base hover:bg-black transition-all flex items-center justify-center gap-3 mt-4 active:scale-95 shadow-xl shadow-slate-100 disabled:opacity-50 disabled:active:scale-100 group"
         >
           Start Exam Session

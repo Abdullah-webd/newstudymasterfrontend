@@ -1,4 +1,5 @@
 import MarkdownRenderer from './MarkdownRenderer';
+import MathContent from './MathContent';
 
 export default function ExamQuestionScreen({
   questions,
@@ -65,10 +66,9 @@ export default function ExamQuestionScreen({
           </div>
         )}
         <div className="prose prose-slate max-w-none mb-10">
-          <MarkdownRenderer
-            content={question.question_text}
-            className="text-xl font-semibold text-slate-800 leading-relaxed font-outfit"
-          />
+          <MathContent className="text-xl font-semibold text-slate-800 leading-relaxed font-outfit">
+            {question.question_text}
+          </MathContent>
         </div>
 
         {isTheory ? (
@@ -97,10 +97,7 @@ export default function ExamQuestionScreen({
                   {key.toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <MarkdownRenderer
-                    content={String(value)}
-                    className="text-base font-bold"
-                  />
+                  <MathContent className="text-base font-bold">{String(value)}</MathContent>
                 </div>
               </label>
             ))}

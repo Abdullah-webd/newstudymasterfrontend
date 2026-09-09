@@ -49,9 +49,9 @@ export default function RecentActivity({ activityData = [] }) {
     <section className="bg-white border border-[#EAEAEA] rounded-xl shadow-sm overflow-hidden">
       <div className="p-5 border-b border-[#EAEAEA] flex items-center justify-between bg-white">
         <h2 className="text-sm font-medium text-[#171717]">Recent Activity</h2>
-        <button className="text-xs text-[#666666] hover:text-[#171717] transition-colors">
+        <a href="/activity" className="text-xs text-[#666666] hover:text-[#171717] transition-colors">
           View all
-        </button>
+        </a>
       </div>
       <div className="divide-y divide-[#FAFAFA]">
         {activities.map((activity, index) => (

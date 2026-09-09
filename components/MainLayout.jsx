@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import Sidebar from './Sidebar'
 import MobileHeader from './MobileHeader'
 import MobileBottomNav from './MobileBottomNav'
+import V2Gate from './V2Gate'
+import ProductTour from './ProductTour'
 
 const trackAppSession = async (action) => {
   if (typeof window === 'undefined') return;
@@ -40,6 +42,8 @@ export default function MainLayout({ children, isFullBleed = false }) {
       </main>
 
       <MobileBottomNav />
+      <V2Gate />
+      <ProductTour />
     </div>
   )
 }

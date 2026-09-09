@@ -65,6 +65,25 @@ export default function AdminUsersPage() {
     const [renewMsg, setRenewMsg] = useState('');
     const [renewLoading, setRenewLoading] = useState(false);
     const [contactedMap, setContactedMap] = useState({});
+    // Success advisors: which human is checking in on each student.
+    const [advisorMap, setAdvisorMap] = useState({});
+    const [advisorSaving, setAdvisorSaving] = useState({});
+
+    const saveAdvisor = async (userId) => {
+        const advisor = advisorMap[userId] ?? '';
+        setAdvisorSaving((p) => ({ ...p, [userId]: true }));
+        try {
+            await fetch(`${API_URL}/admin/users/${userId}/advisor`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ advisor }),
+            });
+        } catch (e) { /* keep local value */ }
+        setAdvisorSaving((p) => ({ ...p, [userId]: false }));
+    };
     const [contactingSaving, setContactingSaving] = useState({});
 
     useEffect(() => {
@@ -110,6 +129,12 @@ export default function AdminUsersPage() {
             setUsers(Array.isArray(data.data) ? data.data : []);
             setTotalPages(data.totalPages || 1);
             setTotalCount(data.count || 0);
+            // Sync advisor assignments from server
+            {
+                const amap = {};
+                (Array.isArray(data.data) ? data.data : []).forEach((u) => { amap[u.userId] = u.successAdvisor || ''; });
+                setAdvisorMap(amap);
+            }
             // Sync contacted state from server
             const map = {};
             (Array.isArray(data.data) ? data.data : []).forEach((u) => {
@@ -225,6 +250,7 @@ export default function AdminUsersPage() {
                                         <th className="py-2 pr-2">Plan</th>
                                         <th className="py-2 pr-2">Expires</th>
                                         <th className="py-2 pr-2">Contacted</th>
+                                        <th className="py-2 pr-2">Success Advisor</th>
                                         <th className="py-2 pr-2">Action</th>
                                     </tr>
                                 </thead>
@@ -255,6 +281,17 @@ export default function AdminUsersPage() {
                                                 </label>
                                             </td>
                                             <td className="py-2 pr-2">
+                                                <input
+                                                    type="text"
+                                                    value={advisorMap[user?.userId] ?? ''}
+                                                    placeholder="Assign advisor…"
+                                                    onChange={(e) => setAdvisorMap((p) => ({ ...p, [user?.userId]: e.target.value }))}
+                                                    onBlur={() => saveAdvisor(user?.userId)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                                                    className={`w-32 text-xs border rounded px-2 py-1 bg-white ${advisorSaving[user?.userId] ? 'border-amber-300' : 'border-[#ddd]'}`}
+                                                />
+                                            </td>
+                                            <td className="py-2 pr-2">
                                                 <button
                                                     onClick={() => setSelectedUserId(user?.userId || '')}
                                                     className="text-xs border border-[#ddd] px-2 py-1 rounded bg-white hover:bg-[#f8f8f8]"
@@ -266,7 +303,7 @@ export default function AdminUsersPage() {
                                     ))}
                                     {!users.length && !loading && (
                                         <tr>
-                                            <td colSpan={9} className="py-6 text-center text-[#777]">No users found.</td>
+                                            <td colSpan={10} className="py-6 text-center text-[#777]">No users found.</td>
                                         </tr>
                                     )}
                                 </tbody>

@@ -1,6 +1,6 @@
 import MarkdownRenderer from './MarkdownRenderer';
 import QuestionOption from './QuestionOption';
-import { InlineMath, BlockMath } from 'react-katex';
+import MathContent from './MathContent';
 
 
 export default function QuestionCard({
@@ -17,26 +17,8 @@ export default function QuestionCard({
   questionType,
   images = []
 }) {
-  const renderText = (text) => {
-    if (!text) return null;
-
-    // Simple regex to detect LaTeX-like content
-    const hasMath = text.includes('\\(') || text.includes('\\[');
-
-    if (hasMath) {
-      const parts = text.split(/(\\\(.*?\\\)|\\\[.*?\\\])/g);
-      return parts.map((part, i) => {
-        if (part && part.startsWith('\\(')) {
-          return <InlineMath key={i} math={part.slice(2, -2)} />;
-        }
-        if (part && part.startsWith('\\[')) {
-          return <BlockMath key={i} math={part.slice(2, -2)} />;
-        }
-        return <span key={i}>{part}</span>;
-      });
-    }
-    return text;
-  };
+  // Unified maths renderer — handles $, \(..\), and bare LaTeX alike.
+  const renderText = (text) => (text ? <MathContent>{text}</MathContent> : null);
 
   return (
     <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm transition-all hover:shadow-md">

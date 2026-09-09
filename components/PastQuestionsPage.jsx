@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import useLeaveGuard from '@/hooks/useLeaveGuard';
 import PastQuestionsHeader from './PastQuestionsHeader';
 import FilterScreen from './FilterScreen';
 import QuestionsListScreen from './QuestionsListScreen';
@@ -23,6 +24,7 @@ const trackActivity = async (action, metadata = {}) => {
 
 export default function PastQuestionsPage() {
   const [currentView, setCurrentView] = useState('filter');
+  useLeaveGuard(currentView === 'questions', 'Leaving this page will end your practice session. Are you sure?');
   const [filters, setFilters] = useState({
     subject: 'Mathematics',
     year: '2023',
@@ -38,10 +40,31 @@ export default function PastQuestionsPage() {
     setFilters(filterData);
     setCurrentView('list');
     if (!isTracking.current) {
-      trackActivity('start', { subject: filterData.subject, examType: filterData.examType });
+      trackActivity('start', { subject: filterData.subject, examType: filterData.examType, topic: filterData.topic });
       isTracking.current = true;
     }
   };
+
+  // Roadmap handoff: /pastquestions?subject=..&topic=..&exam=..&count=.. jumps
+  // straight into a topic-filtered practice session (no manual filtering).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const p = new URLSearchParams(window.location.search);
+    const subject = p.get('subject');
+    const topic = p.get('topic');
+    if (subject && topic) {
+      window.history.replaceState(null, '', '/pastquestions');
+      handleFilterSubmit({
+        subject,
+        topic,
+        examType: p.get('exam') || 'WAEC',
+        questionType: 'obj',
+        year: '',
+        count: parseInt(p.get('count') || '20', 10) || 20,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleBackToFilter = () => {
     setCurrentView('filter');

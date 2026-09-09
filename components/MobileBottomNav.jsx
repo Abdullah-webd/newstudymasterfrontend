@@ -16,7 +16,7 @@ export default function MobileBottomNav() {
     { icon: 'solar:notebook-linear', label: 'My Notes', href: '/notes?view=library' },
     { icon: 'solar:book-bookmark-linear', label: 'Past Q.', href: '/pastquestions' },
     { icon: 'solar:pen-new-square-linear', label: 'Exam', href: '/exam' },
-    { icon: 'solar:calendar-linear', label: 'Time', href: '/timetable' },
+    { icon: 'solar:map-arrow-square-linear', label: 'Roadmap', href: '/roadmap' },
     { icon: 'solar:user-speak-rounded-linear', label: 'Coach', href: '/coach' },
     { icon: 'solar:users-group-two-rounded-linear', label: 'Comm.', href: '/community' },
     { icon: 'solar:gamepad-linear', label: 'Gaming', href: '/gaming' },

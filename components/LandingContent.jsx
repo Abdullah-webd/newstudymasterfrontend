@@ -34,6 +34,7 @@ export default function LandingContent({ className = '' }) {
               <a href="#problem" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">The Problem</a>
               <a href="#research" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Research</a>
               <a href="#solution" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Solution</a>
+              <a href="#features" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Features</a>
               <a href="#results" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Results</a>
               <a href="/landing/community" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Community</a>
               <a href="#pricing" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Pricing</a>
@@ -63,6 +64,7 @@ export default function LandingContent({ className = '' }) {
               <a href="#problem" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>The Problem</a>
               <a href="#research" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Research</a>
               <a href="#solution" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Solution</a>
+              <a href="#features" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Features</a>
               <a href="#results" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Results</a>
               <a href="/landing/community" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Community</a>
               <a href="#pricing" className="block text-slate-600 hover:text-slate-900" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
@@ -420,6 +422,35 @@ export default function LandingContent({ className = '' }) {
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Practice & improve</h3>
               <p className="text-sm text-slate-500 px-4">Take CBT mocks, track your growth, and watch your readiness score rise.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="py-24 bg-slate-50/50 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="font-heading text-3xl font-semibold tracking-tight text-slate-900">Everything a great teacher does — built in</h2>
+            <p className="text-slate-500 mt-3 max-w-2xl mx-auto text-sm">StudyMaster doesn't hand you tools and walk away. It teaches, tracks, and adjusts until you reach your target score.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: 'solar:document-add-linear', color: 'text-blue-600 bg-blue-50', title: 'AI Study Notes', desc: 'Ask for any topic — the AI researches the Nigerian curriculum, writes a simple note with diagrams, and builds a quiz underneath.' },
+              { icon: 'solar:user-speak-rounded-linear', color: 'text-emerald-600 bg-emerald-50', title: 'Live AI Teacher', desc: 'A real-time voice teacher reads your note aloud, highlights every word — and you can interrupt to ask questions, live.' },
+              { icon: 'solar:map-arrow-square-linear', color: 'text-indigo-600 bg-indigo-50', title: 'Personal Roadmap', desc: 'Tell us your dream course; we research the real requirements and build a day-by-day path to your exam — and adjust when life happens.' },
+              { icon: 'solar:graph-up-linear', color: 'text-teal-600 bg-teal-50', title: 'Readiness Score', desc: 'Watch your live probability of hitting your target score grow as you study — earned by real practice, not vibes.' },
+              { icon: 'solar:book-bookmark-linear', color: 'text-amber-600 bg-amber-50', title: '23,000+ Past Questions', desc: 'Real WAEC & JAMB questions with AI explanations, topic practice ("give me 20 number bases questions"), and AI-marked theory.' },
+              { icon: 'solar:users-group-two-rounded-linear', color: 'text-rose-600 bg-rose-50', title: 'Coach & Community', desc: 'A 24/7 AI coach that sees your images and hears your voice — plus a community and a human success advisor checking in on you.' },
+            ].map((f) => (
+              <div key={f.title} className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${f.color}`}>
+                  <iconify-icon icon={f.icon} width="22" height="22" />
+                </div>
+                <h3 className="text-base font-semibold text-slate-900 mb-1.5">{f.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

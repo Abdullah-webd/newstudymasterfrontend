@@ -1,13 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ShapeChallenge from './ShapeChallenge'
 import Leaderboard from './Leaderboard'
 import GameHelp from './GameHelp'
+import Loading from './Loading'
 
 export default function GamingContent() {
   const [activeTab, setActiveTab] = useState('challenge')
   const [showHelp, setShowHelp] = useState(false)
+  // Admin-controlled availability: which games are live right now.
+  const [availability, setAvailability] = useState(null)
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/game/available`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setAvailability(d.success ? d.data : { gamingEnabled: true, games: [{ key: 'shape-challenge' }] }))
+      .catch(() => setAvailability({ gamingEnabled: true, games: [{ key: 'shape-challenge' }] }))
+  }, [])
+
+  if (availability === null) return <Loading label="Loading games…" />
+
+  const shapeOn = availability.gamingEnabled &&
+    availability.games.some((g) => g.key === 'shape-challenge')
+
+  if (!availability.gamingEnabled || !shapeOn) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center max-w-md mx-auto">
+        <div className="w-16 h-16 rounded-3xl bg-[#F5F5F5] flex items-center justify-center mb-5">
+          <iconify-icon icon="solar:gamepad-linear" width="30" height="30" className="text-[#A3A3A3]" />
+        </div>
+        <h2 className="text-xl font-semibold text-[#171717] mb-2">Games are resting 😴</h2>
+        <p className="text-sm text-[#666666]">
+          New brain games drop on Fridays — check back soon and battle for the leaderboard!
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-700">

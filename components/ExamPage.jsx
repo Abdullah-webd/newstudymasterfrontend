@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from 'react';
+import useLeaveGuard from '@/hooks/useLeaveGuard';
 import { toast } from 'sonner';
 import ExamHeader from './ExamHeader';
 import ExamFilterScreen from './ExamFilterScreen';
@@ -9,6 +10,7 @@ import ExamAIChat from './ExamAIChat';
 
 export default function ExamPage() {
   const [screen, setScreen] = useState('filter'); // filter, questions, results, loading
+  useLeaveGuard(screen === 'questions', 'Leaving this page will end your exam session. Are you sure?');
   const [examId, setExamId] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
