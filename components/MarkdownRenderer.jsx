@@ -5,10 +5,14 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { normalizeMathForMarkdown } from './MathContent';
 
 export default function MarkdownRenderer({ content, className = "" }) {
     // Basic cleanup for markdown that might be missing spaces after '#'
-    const safeContent = (content || "").replace(/(#+)([^#\s])/g, '$1 $2');
+    let safeContent = (content || "").replace(/(#+)([^#\s])/g, '$1 $2');
+    // remark-math only understands $ / $$. Convert \(..\), \[..\] and bare LaTeX
+    // so every maths format in the question bank renders instead of leaking raw.
+    safeContent = normalizeMathForMarkdown(safeContent);
 
     return (
         <div className={`markdown-content w-full ${className}`}>

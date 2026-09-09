@@ -25,6 +25,67 @@ const getSubStatus = (subscription) => {
     return 'active';
 };
 
+// Phase 7: admin controls which brain games are live on the Gaming tab.
+const GamesPanel = ({ token }) => {
+    const [data, setData] = useState(null);
+    const [saving, setSaving] = useState(false);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    useEffect(() => {
+        if (!token) return;
+        fetch(`${API_URL}/admin/games`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((r) => r.json())
+            .then((d) => d.success && setData(d.data))
+            .catch(() => {});
+    }, [token, API_URL]);
+
+    const push = async (next) => {
+        setData(next);
+        setSaving(true);
+        try {
+            await fetch(`${API_URL}/admin/games`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ gamingEnabled: next.gamingEnabled, games: next.games.map((g) => ({ key: g.key, enabled: g.enabled })) }),
+            });
+        } catch (e) { /* keep optimistic state */ }
+        setSaving(false);
+    };
+
+    if (!data) return null;
+    return (
+        <section className="bg-white border border-[#ececec] rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h2 className="text-sm font-semibold text-[#171717]">Brain Games</h2>
+                    <p className="text-xs text-[#888]">Toggle games on/off for the whole platform. {saving && '· Saving…'}</p>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <span className={`text-xs font-semibold ${data.gamingEnabled ? 'text-green-600' : 'text-[#999]'}`}>
+                        Gaming tab {data.gamingEnabled ? 'ON' : 'OFF'}
+                    </span>
+                    <input type="checkbox" checked={data.gamingEnabled}
+                        onChange={(e) => push({ ...data, gamingEnabled: e.target.checked })}
+                        className="w-4 h-4 accent-[#171717] cursor-pointer" />
+                </label>
+            </div>
+            <div className="space-y-2">
+                {data.games.map((g) => (
+                    <div key={g.key} className={`flex items-center justify-between p-3 rounded-xl border ${g.enabled && data.gamingEnabled ? 'border-green-100 bg-green-50/40' : 'border-[#efefef] bg-[#fafafa]'}`}>
+                        <div>
+                            <div className="text-sm font-medium text-[#171717]">{g.name}</div>
+                            <div className="text-xs text-[#888]">{g.description}</div>
+                        </div>
+                        <input type="checkbox" checked={g.enabled} disabled={!data.gamingEnabled}
+                            onChange={(e) => push({ ...data, games: data.games.map((x) => x.key === g.key ? { ...x, enabled: e.target.checked } : x) })}
+                            className="w-4 h-4 accent-[#171717] cursor-pointer disabled:opacity-40" />
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+};
+
 const SubBadge = ({ subscription }) => {
     const status = getSubStatus(subscription);
     const styles = {
@@ -236,6 +297,8 @@ export default function AdminPage() {
                     <KpiCard label="Users on 1-Day Trial" value={summary.trialUsers ?? 0} />
                     <KpiCard label="Most Used Tab" value={summary.mostUsedTab || '-'} />
                 </section>
+
+                <GamesPanel token={token} />
 
                 {/* Expired users banner */}
                 {users.filter(u => getSubStatus(u.subscription) === 'expired').length > 0 && (

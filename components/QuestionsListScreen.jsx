@@ -17,14 +17,28 @@ export default function QuestionsListScreen({ filters, onBack, onAskAI }) {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const params = new URLSearchParams({
-          subject: filters.subject,
-          year: filters.year,
-          exam_name: filters.examType,
-          question_type: filters.questionType
-        });
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions?${params}`);
+        let response;
+        if (filters.topic) {
+          // Topic practice: fetch questions matching the typed topic (e.g. "number bases")
+          const params = new URLSearchParams({
+            subject: filters.subject,
+            topic: filters.topic,
+            exam_name: filters.examType,
+            question_type: filters.questionType || 'obj',
+            limit: String(filters.count || 20),
+          });
+          response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/search?${params}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          });
+        } else {
+          const params = new URLSearchParams({
+            subject: filters.subject,
+            year: filters.year,
+            exam_name: filters.examType,
+            question_type: filters.questionType
+          });
+          response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions?${params}`);
+        }
         const result = await response.json();
 
         if (result.success) {
@@ -229,7 +243,9 @@ export default function QuestionsListScreen({ filters, onBack, onAskAI }) {
           {currentIndex < questions.length - 1 ? (
             <button
               onClick={handleNext}
-              disabled={!answers[currentIndex]}
+              // Revealing the answer counts as being done with the question —
+              // otherwise "Show Answer" leaves you stuck until you also tick an option.
+              disabled={!answers[currentIndex] && !showAnswers[currentIndex]}
               className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 transition-all shadow-lg shadow-indigo-100 flex items-center gap-2"
             >
               Next Question

@@ -26,6 +26,13 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         });
     };
 
+    // A V1 student who has never completed the V2 flow. The V1 screens no longer
+    // exist, so they must be sent through the new onboarding before anything
+    // else — ahead of the expired-subscription redirect, which would otherwise
+    // trap them on /settings (every legacy account is expired).
+    const needsV2Onboarding = (candidate: any) =>
+        !!candidate?.onboardingCompleted && candidate?.onboarding?.version !== 'v2';
+
     useEffect(() => {
         if (!loading) {
             const isAuthRoute = pathname.startsWith('/auth');
@@ -44,6 +51,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                 router.push('/landing');
             } else if (user) {
                 const hasOnboarded = hasCompletedOnboarding(user);
+                const mustMigrate = needsV2Onboarding(user);
                 const subscriptionExpired = isSubscriptionExpired(user);
 
                 if (isLandingRoute || isHomeRoute) {
@@ -54,6 +62,11 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                     router.push(`/auth/verify-otp?email=${encodeURIComponent(user.email)}`);
                 } else if (!hasOnboarded && !isOnboardingRoute && !isAuthRoute && !isPublicRoute) {
                     router.push('/onboarding');
+                } else if (mustMigrate && !isOnboardingRoute && !isAuthRoute && !isPublicRoute) {
+                    // Migration outranks everything below, including expiry.
+                    router.push('/onboarding');
+                } else if (mustMigrate && isOnboardingRoute) {
+                    // Let them stay and finish it.
                 } else if (hasOnboarded && isOnboardingRoute) {
                     router.push('/dashboard');
                 } else if (isAuthRoute) {

@@ -284,3 +284,38 @@
 .sm-notes-container .definition p {
   @apply m-0 text-sm text-emerald-900 italic font-medium;
 }
+
+/* --- Agentic note canvas (.note-html) --- */
+.note-html { @apply text-[15px] leading-relaxed text-gray-700; }
+.note-html h1 { @apply text-2xl font-bold text-gray-900 mb-4 mt-2; }
+.note-html h2 { @apply text-xl font-bold text-gray-900 mt-8 mb-3 pb-1 border-b border-gray-100; }
+.note-html h3 { @apply text-lg font-semibold text-gray-800 mt-6 mb-2; }
+.note-html p { @apply my-3; }
+.note-html ul { @apply list-disc pl-6 my-3 space-y-1.5; }
+.note-html ol { @apply list-decimal pl-6 my-3 space-y-1.5; }
+.note-html li { @apply leading-relaxed; }
+.note-html strong { @apply font-semibold text-gray-900; }
+.note-html a { @apply text-blue-600 underline; }
+.note-html figure.note-image { @apply my-6 flex flex-col items-center; }
+.note-html figure.note-image img { @apply rounded-2xl border border-gray-100 shadow-sm max-h-80 object-contain bg-gray-50; }
+.note-html figure.note-image figcaption { @apply text-xs text-gray-500 mt-2 text-center max-w-md; }
+.note-html .katex { font-size: 1.05em; }
+.note-html table { @apply w-full my-4 text-sm border-collapse; }
+.note-html th, .note-html td { @apply border border-gray-200 px-3 py-1.5 text-left; }
+
+/* --- Read-along highlight (karaoke) --- */
+.note-html [data-seg] { transition: background-color 0.2s ease; border-radius: 8px; }
+/* the block currently being read — clearly visible so you always see where you are */
+.note-html .reading-block {
+  background-color: rgba(59, 130, 246, 0.12);
+  box-shadow: -10px 0 0 rgba(59, 130, 246, 0.12), inset 3px 0 0 #2563eb;
+  padding-left: 10px;
+  margin-left: -10px;
+}
+/* the actual word being spoken */
+.note-html .ra-w { transition: background-color 0.1s ease, color 0.1s ease; border-radius: 4px; padding: 0 2px; }
+.note-html .ra-w.reading-word {
+  background-color: #2563eb;
+  color: #fff;
+}
+.note-html .katex.reading-word { background-color: rgba(37, 99, 235, 0.28); border-radius: 4px; padding: 0 2px; }

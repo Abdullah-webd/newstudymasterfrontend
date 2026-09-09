@@ -29,6 +29,48 @@ export default function AIOverlay({ isOpen, question, onClose, messages, setMess
     }
   }, [messages, isLoading]);
 
+  // Stream SSE deltas into a live 'ai' message so text appears immediately.
+  // (sse-starlette uses \r\n line endings — normalise before splitting.)
+  const streamInto = async (url, body) => {
+    setMessages(prev => [...prev, { type: 'ai', content: '' }]);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.body) throw new Error('no stream');
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      buffer = buffer.replace(/\r\n/g, '\n');
+      let idx;
+      while ((idx = buffer.indexOf('\n\n')) !== -1) {
+        const raw = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        const line = raw.split('\n').find((l) => l.startsWith('data:'));
+        if (!line) continue;
+        try {
+          const ev = JSON.parse(line.slice(5).trim());
+          if (ev.delta) {
+            setMessages(prev => {
+              const next = [...prev];
+              next[next.length - 1] = { ...next[next.length - 1], content: next[next.length - 1].content + ev.delta };
+              return next;
+            });
+          }
+          if (ev.error) throw new Error(ev.error);
+        } catch (e) { /* keep streaming */ }
+      }
+    }
+  };
+
   const handleExplainQuestion = async () => {
     try {
       setIsLoading(true);
@@ -37,25 +79,9 @@ export default function AIOverlay({ isOpen, question, onClose, messages, setMess
         type: 'context',
         content: `Question: ${question.question_text}`
       }]);
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/explain`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          questionData: question
-        })
+      await streamInto(`${process.env.NEXT_PUBLIC_API_URL}/questions/explain-stream`, {
+        questionData: question
       });
-
-      const result = await response.json();
-      if (result.success) {
-        setMessages(prev => [...prev, {
-          type: 'ai',
-          content: result.explanation
-        }]);
-      }
     } catch (error) {
       toast.error('Failed to get AI explanation');
     } finally {
@@ -67,34 +93,20 @@ export default function AIOverlay({ isOpen, question, onClose, messages, setMess
     if (!inputValue.trim() || isLoading) return;
 
     const userMsg = inputValue.trim();
+    const history = [...messages, { type: 'user', content: userMsg }].slice(-8).map(m => ({
+      role: m.type === 'ai' ? 'assistant' : 'user',
+      content: m.content
+    }));
     setMessages(prev => [...prev, { type: 'user', content: userMsg }]);
     setInputValue('');
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/follow-up`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          message: userMsg,
-          history: messages.slice(-6).map(m => ({
-            role: m.type === 'ai' ? 'assistant' : (m.type === 'context' ? 'system' : 'user'),
-            content: m.content
-          })),
-          questionData: question
-        })
+      await streamInto(`${process.env.NEXT_PUBLIC_API_URL}/questions/follow-up-stream`, {
+        message: userMsg,
+        history,
+        questionData: question
       });
-
-      const result = await response.json();
-      if (result.success) {
-        setMessages(prev => [...prev, {
-          type: 'ai',
-          content: result.response
-        }]);
-      }
     } catch (error) {
       toast.error('Failed to send message');
     } finally {
@@ -126,11 +138,15 @@ export default function AIOverlay({ isOpen, question, onClose, messages, setMess
 
       {/* AI Panel */}
       <div
-        className={`absolute bottom-0 left-0 right-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-2xl h-[85vh] sm:h-[80vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-[0_-8px_40px_rgba(0,0,0,0.08)] sm:shadow-2xl border border-gray-200 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isOpen
-          ? 'translate-y-0 sm:scale-100 sm:opacity-100 pointer-events-auto'
-          : 'translate-y-full sm:scale-95 sm:opacity-0 pointer-events-none'
+        className={`absolute bottom-0 left-0 right-0 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 w-full sm:max-w-3xl h-[85vh] bg-white rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.12)] border border-gray-200 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isOpen
+          ? 'translate-y-0 pointer-events-auto'
+          : 'translate-y-full pointer-events-none'
           }`}
       >
+        {/* Drag handle */}
+        <div className="pt-3 flex justify-center" onClick={onClose}>
+          <div className="w-12 h-1.5 rounded-full bg-gray-200 cursor-pointer" title="Close"></div>
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100">
           <div className="flex items-center gap-3">
