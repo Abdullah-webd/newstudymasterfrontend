@@ -8,7 +8,7 @@ import 'katex/dist/katex.min.css'
 // KaTeX rendering that handles $...$, $$...$$, \(...\), \[...\], BARE LaTeX
 // (\frac{..}, x^2 ...) and recovers control-chars from old JSON corruption.
 
-function recoverLatex(s) {
+export function recoverLatex(s) {
   return (s == null ? '' : String(s))
     .replace(/\f/g, '\\f').replace(/\t/g, '\\t').replace(/\x0b/g, '\\v')
     .replace(/\x08/g, '\\b').replace(/\r/g, '\\r')

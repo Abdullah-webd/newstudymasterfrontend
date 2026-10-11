@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Volume2, Loader2, Sparkles, Check, BookOpen, Pause, Square, Radio } from 'lucide-react'
-import LiveTeach, { primeLiveAudio } from './LiveTeach'
+import { Volume2, Loader2, Sparkles, Check, BookOpen, Pause, Square } from 'lucide-react'
 import 'katex/dist/katex.min.css'
 import katex from 'katex'
 
@@ -235,8 +234,8 @@ export default function NoteCanvas({ note, generating, steps, noteLoading }) {
   // into the HTML string — so nothing here mutates the DOM, and DOM regeneration
   // can never erase the highlight.
   const [cursor, setCursor] = useState(null)
-  const [liveActive, setLiveActive] = useState(false)
   const noteId = note?.id || note?.noteId
+  const selectedVersion = note?.selectedVersion || note?.currentVersion || 1
 
   // Preloaded audio clips, keyed by segment index — upcoming clips are fetched
   // ahead of time so there is no dead air between segments.
@@ -291,22 +290,8 @@ export default function NoteCanvas({ note, generating, steps, noteLoading }) {
     setPlayer('idle')
   }, [])
 
-  useEffect(() => { stop(); setSegments([]); setVoiceless(false); setLiveActive(false) }, [noteId, stop])
+  useEffect(() => { stop(); setSegments([]); setVoiceless(false) }, [noteId, selectedVersion, stop])
   useEffect(() => () => stop(), [stop])
-
-  // Live Teaching: the teacher's show_segment tool-calls drive the highlight.
-  const onLiveSegment = useCallback((i) => {
-    prepareBody()
-    setCursor({ seg: i, w: -1 })
-    const body = getBody()
-    const block = body?.querySelector(`[data-seg="${i}"]`)
-    block?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  // primeLiveAudio() runs INSIDE the click gesture, so the browser's autoplay
-  // policy unlocks the audio engine before the session even connects.
-  const startLive = () => { primeLiveAudio(); stop(); setLiveActive(true) }
-  const endLive = () => { setLiveActive(false); setCursor(null) }
 
   // Ensure blocks are tagged + words wrapped on the CURRENT visible DOM.
   const prepareBody = useCallback(() => {
@@ -427,7 +412,7 @@ export default function NoteCanvas({ note, generating, steps, noteLoading }) {
     prepareBody()
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${API_URL}/notes/${noteId}/read-along`, {
+      const res = await fetch(`${API_URL}/notes/${noteId}/read-along?version=${selectedVersion}`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json()
@@ -438,7 +423,7 @@ export default function NoteCanvas({ note, generating, steps, noteLoading }) {
       prepareBody()
       playFrom(0, segs)
     } catch (e) { setPlayer('idle') }
-  }, [noteId, playFrom, prepareBody])
+  }, [noteId, selectedVersion, playFrom, prepareBody])
 
   const pause = useCallback(() => {
     clearTimers()
@@ -491,23 +476,16 @@ export default function NoteCanvas({ note, generating, steps, noteLoading }) {
   const quiz = note.quiz && note.quiz.questions
     ? note.quiz
     : (Array.isArray(note.quiz) ? { id: note.quizId, questions: note.quiz } : null)
-
   return (
     <div ref={rootRef} className="h-full overflow-y-auto bg-white">
       <div className="max-w-3xl mx-auto px-5 sm:px-8 py-6">
-        <div className="flex items-center justify-between gap-3 mb-6 sticky top-0 bg-white/90 backdrop-blur py-2 z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sticky top-0 bg-white/90 backdrop-blur py-2 z-10">
           <div className="min-w-0">
             {note.subject && <div className="text-xs font-semibold text-blue-500 uppercase">{(note.subject || '').replace(/-/g, ' ')}</div>}
             <h1 className="text-lg font-bold text-gray-900 truncate">{note.title}</h1>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {!liveActive && (
-              <button onClick={startLive}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium shadow-lg shadow-emerald-500/20 active:scale-[0.98]">
-                <Radio className="w-4 h-4" /> Live Teach
-              </button>
-            )}
-            <button onClick={onButton} disabled={player === 'preparing' || liveActive}
+          <div className="flex items-center gap-2 flex-wrap sm:justify-end shrink-0">
+            <button onClick={onButton} disabled={player === 'preparing'}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium disabled:opacity-60">
               {player === 'preparing' ? <Loader2 className="w-4 h-4 animate-spin" />
                 : player === 'playing' ? <Pause className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -518,12 +496,13 @@ export default function NoteCanvas({ note, generating, steps, noteLoading }) {
                 <Square className="w-4 h-4" />
               </button>
             )}
+            <span className="text-xs text-gray-400">AI-generated voice</span>
           </div>
         </div>
 
         {voiceless && (player === 'playing' || player === 'paused') && (
           <div className="mb-3 text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
-            Voice is unavailable right now (Spitch credits), so this is following along without sound.
+            Voice is unavailable right now, so this is following along without sound.
           </div>
         )}
 
@@ -551,9 +530,6 @@ export default function NoteCanvas({ note, generating, steps, noteLoading }) {
         <NoteBody html={note.content} bodyRef={bodyRef} />
         <Quiz quiz={quiz} noteId={noteId} />
 
-        {liveActive && (
-          <LiveTeach noteId={noteId} onSegment={onLiveSegment} onEnd={endLive} />
-        )}
       </div>
     </div>
   )

@@ -30,6 +30,7 @@ export default function Sidebar() {
   const navItems = [
     { icon: 'solar:widget-linear', label: 'Dashboard', href: '/dashboard' },
     { icon: 'solar:document-text-linear', label: 'Note Generation', href: '/notes' },
+    { icon: 'solar:microphone-3-linear', label: 'Live Learning', href: '/live-learning' },
     { icon: 'solar:book-bookmark-linear', label: 'Past Questions', href: '/pastquestions' },
     { icon: 'solar:pen-new-square-linear', label: 'Exam', href: '/exam' },
     { icon: 'solar:map-arrow-square-linear', label: 'Roadmap', href: '/roadmap' },

@@ -5,12 +5,13 @@ import { motion } from 'framer-motion'
 import {
   Plus, Mic, Send, Loader2, BookOpen, MessageSquarePlus, Trash2, X, Square,
 } from 'lucide-react'
+import MarkdownRenderer from '../MarkdownRenderer'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export default function ChatPanel({
   tab, setTab, messages, onSend, generating, library, libLoading, onOpenNote, onDeleteNote,
-  onNewNote, activeNoteId,
+  onNewNote, activeNoteId, onSelectVersion, activeVersion,
 }) {
   const [text, setText] = useState('')
   const [images, setImages] = useState([]) // {dataUrl, name}
@@ -104,7 +105,23 @@ export default function ChatPanel({
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-100 text-gray-700'}`}>
-                  {m.message}
+                  {m.role === 'assistant'
+                    ? <MarkdownRenderer content={m.message} className="[&_p]:mb-2 [&_p:last-child]:mb-0" />
+                    : m.message}
+                  {m.role === 'assistant' && m.versionNumber && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectVersion?.(m.versionNumber)}
+                      className={`mt-2 inline-flex min-h-9 items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        activeVersion === m.versionNumber
+                          ? 'border-blue-200 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 bg-white text-gray-600 hover:border-blue-200 hover:text-blue-700'
+                      }`}
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                      {activeVersion === m.versionNumber ? `Viewing Version ${m.versionNumber}` : `Open Version ${m.versionNumber}`}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

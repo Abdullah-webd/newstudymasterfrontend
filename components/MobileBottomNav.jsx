@@ -13,6 +13,7 @@ export default function MobileBottomNav() {
   const navItems = [
     { icon: 'solar:widget-linear', label: 'Dash', href: '/dashboard' },
     { icon: 'solar:magic-stick-linear', label: 'Study', href: '/notes' },
+    { icon: 'solar:microphone-3-linear', label: 'Live', href: '/live-learning' },
     { icon: 'solar:notebook-linear', label: 'My Notes', href: '/notes?view=library' },
     { icon: 'solar:book-bookmark-linear', label: 'Past Q.', href: '/pastquestions' },
     { icon: 'solar:pen-new-square-linear', label: 'Exam', href: '/exam' },

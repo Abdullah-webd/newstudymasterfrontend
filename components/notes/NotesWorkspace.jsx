@@ -111,7 +111,10 @@ export default function NotesWorkspace() {
     try {
       const res = await fetch(`${API_URL}/notes/assist`, {
         method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({ prompt, images, noteId: note?.id || note?.noteId || null }),
+        body: JSON.stringify({
+          prompt, images, noteId: note?.id || note?.noteId || null,
+          sourceVersion: note?.selectedVersion || note?.currentVersion || null,
+        }),
       })
       await readSSE(res, (ev) => {
         if (ev.type === 'intent') {
@@ -121,7 +124,27 @@ export default function NotesWorkspace() {
           setSteps((s) => [...s, ev.message])
         } else if (ev.type === 'complete') {
           handledByComplete = true
-          setNote(ev.note)
+          setNote((current) => {
+            const previousVersions = new Map(
+              (current?.versions || []).map((version) => [version.number, version])
+            )
+            const versions = (ev.note.versions || []).map((version) => {
+              const previous = previousVersions.get(version.number)
+              return {
+                ...previous,
+                ...version,
+                quiz: version.number === ev.note.currentVersion
+                  ? ev.note.quiz
+                  : previous?.quiz,
+              }
+            })
+            return {
+              ...ev.note,
+              versions,
+              quiz: ev.note.quiz || current?.quiz,
+              selectedVersion: ev.note.currentVersion || 1,
+            }
+          })
           setNoteUrl(ev.note.id || ev.note.noteId)
           if (Array.isArray(ev.note.chatHistory)) setMessages(ev.note.chatHistory)
           loadLibrary()
@@ -149,7 +172,7 @@ export default function NotesWorkspace() {
       const res = await fetch(`${API_URL}/notes/${id}`, { headers: authHeaders() })
       const data = await res.json()
       if (data.success) {
-        setNote(data.data)
+        setNote({ ...data.data, selectedVersion: data.data.currentVersion || 1 })
         setNoteUrl(id)
         // Each note carries its own chat thread.
         setMessages(Array.isArray(data.data.chatHistory) ? data.data.chatHistory : [])
@@ -171,6 +194,22 @@ export default function NotesWorkspace() {
     setNote(null); setMessages([]); setSteps([]); setTab('chat'); setMobilePane('chat'); setNoteUrl(null)
   }
 
+  const selectVersion = (versionNumber) => {
+    setNote((current) => {
+      const version = current?.versions?.find((item) => item.number === versionNumber)
+      if (!version) return current
+      return {
+        ...current,
+        content: version.content,
+        images: version.images || [],
+        quiz: version.quiz || null,
+        quizId: version.quizId || null,
+        selectedVersion: version.number,
+      }
+    })
+    setMobilePane('canvas')
+  }
+
   // Single ChatPanel + single NoteCanvas (no duplicate mounts). Responsive
   // classes place them side-by-side on desktop and one-at-a-time on mobile.
   return (
@@ -181,6 +220,7 @@ export default function NotesWorkspace() {
           tab={tab} setTab={setTab} messages={messages} onSend={onSend} generating={generating}
           library={library} libLoading={libLoading} onOpenNote={openNote} onDeleteNote={deleteNote}
           onNewNote={newNote} activeNoteId={note?.id || note?.noteId}
+          onSelectVersion={selectVersion} activeVersion={note?.selectedVersion || note?.currentVersion}
         />
       </div>
 
