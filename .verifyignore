@@ -1,0 +1,6 @@
+# Google Identity Services refuses to render the sign-in button on origins not listed in the
+# Google Cloud OAuth client (local test ports, preview URLs). Not an app bug — config, see VERIFY.md.
+accounts\.google\.com/gsi/button
+GSI_LOGGER\]: The given origin is not allowed
+# the console echo of that same GSI 403 (it carries no URL to match on)
+Failed to load resource: the server responded with a status of 403 \(\)
